@@ -1,7 +1,8 @@
-TODO improve these docs
+# Local model files
 
-1. Download a llama-server suitable for your architecture
-1. Fetch some small models for testing / swapping between
-    - `huggingface-cli download bartowski/Qwen2.5-1.5B-Instruct-GGUF --include "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf" --local-dir ./`
-    - `huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF --include "Llama-3.2-1B-Instruct-Q4_K_M.gguf" --local-dir ./`
-1. Create a new config.yaml file (see `docs/config.example.yaml`) pointing to the models
+For the Strix Halo Compose setup, use the [folder layout and download links
+in the quick start](../README.md#strix-halo-quick-start). You can leave this
+directory empty if you only want to check that the controller starts.
+
+Keep model files and tokenizer assets out of Git. Compose mounts this directory
+read-only, and its build context excludes the entire directory.

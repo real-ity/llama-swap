@@ -5,6 +5,16 @@ dist/
 .vscode
 .DS_Store
 .dev/
+**/__pycache__/
+
+# Keep large model files out of Git even if placed outside models/.
+*.gguf
+*.hgn
+*.safetensors
+*.sft
+*.ckpt
+*.pt
+*.pth
 
 # UI build output; embedded via the `embed_ui` build tag (internal/server/embed.go)
 internal/server/ui_dist/*
