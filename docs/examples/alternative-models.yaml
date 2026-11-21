@@ -1,0 +1,51 @@
+# Setup: alternative-models.md in this directory. Run instead of the Flash/Mini example.
+healthCheckTimeout: 600
+unloadTimeout: 60
+
+macros:
+  HALOGEN_WEIGHTS: /path/to/halogen-27b
+  HERMES_GGUF: /path/to/NousResearch_Hermes-4.3-36B-Q4_K_M.gguf
+  KLEIN_WEIGHTS: /path/to/flux-2-klein-9b.safetensors
+  KLEIN_ENCODER: /path/to/qwen_3_8b.safetensors
+  KLEIN_VAE: /path/to/flux2-vae.safetensors
+
+models:
+  halogen-qwen3.8-27b:
+    cmd: >-
+      docker run --rm --pull=never --name llama-swap-halogen-27b-${PORT}
+      --device /dev/kfd --device /dev/dri --group-add video --group-add render
+      --security-opt seccomp=unconfined --ipc=host --ulimit memlock=-1:-1
+      -p 127.0.0.1:${PORT}:8731
+      --mount "type=bind,src=${HALOGEN_WEIGHTS},dst=/models,readonly"
+      -e HALOGEN_CHECKPOINT=/models/qwen3.8-27b-p1w4d-d2.hgn
+      -e HALOGEN_TOKENIZER=/models/tokenizer
+      ghcr.io/peonist-ai/halogen:0.1.4
+    cmdStop: docker stop -t 15 llama-swap-halogen-27b-${PORT}
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  hermes-4.3-36b:
+    cmd: >-
+      llama-server --host 127.0.0.1 --port ${PORT}
+      --model "${HERMES_GGUF}" --alias hermes-4.3-36b --jinja
+      -c 8192 --parallel 1
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  flux2-klein-9b:
+    cmd: >-
+      sd-server --listen-ip 127.0.0.1 --listen-port ${PORT}
+      --diffusion-model "${KLEIN_WEIGHTS}" --llm "${KLEIN_ENCODER}" --vae "${KLEIN_VAE}"
+      --steps 4 --cfg-scale 1.0
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /v1/models
+    useModelName: sd-cpp-local
+
+groups:
+  heavy-alternatives:
+    swap: true
+    exclusive: true
+    members:
+      - halogen-qwen3.8-27b
+      - hermes-4.3-36b
+      - flux2-klein-9b

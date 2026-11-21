@@ -339,7 +339,9 @@ See the [configuration overview](docs/kb/guides/configuration/configuration-over
 to get started, and the [knowledge base](docs/kb/) for focused guides on the features
 people ask about most.
 
-Example: [Halogen Flash Next for chat and Nemotron Mini for titles](docs/examples/flash-next-nemotron-mini.md).
+Examples:
+- [Halogen Flash Next for chat and Nemotron Mini for titles](docs/examples/flash-next-nemotron-mini.md)
+- [Halogen 27B, Hermes 36B and FLUX.2 Klein 9B, one at a time](docs/examples/alternative-models.md)
 
 You can also just ask. The **Help** page (in the sidebar) is an agent that calls
 llama-swap's own documentation tools and answers questions about your
