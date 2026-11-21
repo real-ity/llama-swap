@@ -1,0 +1,29 @@
+services:
+  llama-swap:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: docker/strix-halo.Containerfile
+    init: true
+    stop_grace_period: 90s
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - type: bind
+        source: ./models
+        target: /models
+        read_only: true
+        bind:
+          create_host_path: false
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    security_opt:
+      - seccomp=unconfined
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    shm_size: 1gb

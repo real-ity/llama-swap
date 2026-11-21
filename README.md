@@ -5,6 +5,77 @@
 
 # llama-swap
 
+## Strix Halo quick start
+
+On Linux x86-64 with an AMD Strix Halo GPU (`gfx1151`), Docker Compose builds
+this fork and its engines locally from public inputs. No host engine installs,
+registry credentials, or Docker socket mount are needed. The first build pulls
+several GB of runtime images and builds the HIP image backend.
+
+Drop the weights you want to run into this layout. `./models` is mounted
+read-only and excluded from the image build.
+
+```text
+models/
+├── Nemotron-Mini-4B-Instruct-Q4_K_M.gguf
+├── NousResearch_Hermes-4.3-36B-Q4_K_M.gguf
+├── flash/
+│   ├── qwen38-flash-next-v2.hgn
+│   ├── qwen38-flash-next-ngram.hgn
+│   └── tokenizer/                       # full Flash tokenizer directory
+├── halogen/
+│   ├── qwen3.8-27b-p1w4d-d2.hgn
+│   └── tokenizer/                       # full 27B tokenizer directory
+├── flux/
+│   ├── flux-2-klein-9b.safetensors      # distilled 9B, not Base or FP8
+│   ├── qwen_3_8b.safetensors            # Qwen3 8B text encoder
+│   └── flux2-vae.safetensors
+└── comfyui/                            # optional workflow weights
+    ├── checkpoints/
+    ├── diffusion_models/
+    ├── text_encoders/
+    └── vae/
+```
+
+Use the links in the [Flash/Mini](docs/examples/flash-next-nemotron-mini.md)
+and [27B/Hermes/FLUX](docs/examples/alternative-models.md) guides to get the
+files. Each Halogen `tokenizer/` must contain its own `tokenizer.json` and
+companion files. Materialize any Hugging Face cache symlinks whose targets
+would otherwise be outside `./models`.
+
+From the repository root:
+
+```sh
+docker compose up
+```
+
+Open [localhost:8080](http://localhost:8080). The controller's
+[`/health`](http://localhost:8080/health) works with an empty models directory;
+[`/v1/models`](http://localhost:8080/v1/models) lists configured IDs, not a
+check of local files. The default config is [`docker/strix-halo.yaml`](docker/strix-halo.yaml).
+Engines start only when requested. If a model's files are missing, its launch
+fails without downloading anything. Other routes can still be requested, but
+selecting a missing heavy model can unload the previous heavy model first.
+
+Select `halogen-qwen3.8-flash-next` for main chat and `nemotron-mini` for titles.
+Flash has one 262,144-token request slot, a 262,144-position KV pool and a
+16,384-token default reply budget. Mini has two 1,024-token CPU slots and can
+stay resident while the other models swap one at a time. Send image generation
+to `flux2-klein-9b`. The separate ComfyUI workflow service opens on demand at
+[`/comfyui/`](http://localhost:8080/comfyui/), with custom nodes disabled and
+scratch outputs inside the container. DS4 is not part of this build.
+
+The Compose image is for local use. It preserves the donor notices and uses
+the [Halogen](https://github.com/peonist-ai/halogen-server/blob/v0.1.4/LICENSE.md)
+and [Flash](https://github.com/peonist-ai/halogen-flash-server/blob/v0.18.22/LICENSE.md)
+vendors' terms. Do not redistribute the assembled image or weights. The
+container gets the GPU devices and uses the vendor's unconfined seccomp setting;
+its API is published only on loopback. The test image build was stopped for
+insufficient disk space before the final runtime checks. Startup on Strix Halo,
+full-context Flash generation, and co-residency with Mini remain unverified.
+
+## About llama-swap
+
 Run multiple generative AI models on your machine and hot-swap between them on demand. llama-swap works with any OpenAI and Anthropic API compatible server and is used by thousands of people to power their local AI workflows.
 
 Built in Go for performance and simplicity, llama-swap has zero dependencies and is incredibly easy to set up. Get started in minutes - just one binary and one configuration file.

@@ -1,0 +1,66 @@
+# Default for the root Compose project. Model files are never copied into the image.
+healthCheckTimeout: 600
+unloadTimeout: 30
+
+models:
+  halogen-qwen3.8-flash-next:
+    cmd: >-
+      strix-launch flash --port ${PORT}
+      --checkpoint /models/flash/qwen38-flash-next-v2.hgn
+      --tokenizer /models/flash/tokenizer
+      --table /models/flash/qwen38-flash-next-ngram.hgn
+      --context 262144 --kv-pool 262144 --slots 1
+      --prefill 16384 --reply-tokens 16384
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  nemotron-mini:
+    cmd: >-
+      strix-launch llama --host 127.0.0.1 --port ${PORT}
+      --model /models/Nemotron-Mini-4B-Instruct-Q4_K_M.gguf --alias nemotron-mini
+      --jinja --ctx-size 2048 --parallel 2 --no-kv-unified --n-gpu-layers 0
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  halogen-qwen3.8-27b:
+    cmd: >-
+      strix-launch halogen --port ${PORT}
+      --checkpoint /models/halogen/qwen3.8-27b-p1w4d-d2.hgn
+      --tokenizer /models/halogen/tokenizer
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  hermes-4.3-36b:
+    cmd: >-
+      strix-launch llama --host 127.0.0.1 --port ${PORT}
+      --model /models/NousResearch_Hermes-4.3-36B-Q4_K_M.gguf
+      --alias hermes-4.3-36b --jinja --ctx-size 8192 --parallel 1
+      --load-mode none --flash-attn on --n-gpu-layers 99
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  flux2-klein-9b:
+    cmd: >-
+      strix-launch sd --listen-ip 127.0.0.1 --listen-port ${PORT}
+      --diffusion-model /models/flux/flux-2-klein-9b.safetensors
+      --llm /models/flux/qwen_3_8b.safetensors --vae /models/flux/flux2-vae.safetensors
+      --steps 4 --cfg-scale 1.0
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /v1/models
+    useModelName: sd-cpp-local
+
+  comfyui_auto:
+    cmd: strix-launch comfyui --listen 127.0.0.1 --port ${PORT}
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /system_stats
+
+groups:
+  heavy:
+    swap: true
+    exclusive: true
+    members: [halogen-qwen3.8-flash-next, halogen-qwen3.8-27b, hermes-4.3-36b, flux2-klein-9b, comfyui_auto]
+  titles:
+    swap: false
+    exclusive: false
+    persistent: true
+    members: [nemotron-mini]

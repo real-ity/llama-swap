@@ -1,0 +1,14 @@
+"""Save only the public image's engine tuning defaults for its private lib path."""
+
+import json
+import os
+
+KEYS = (
+    'HIP_FORCE_DEV_KERNARG', 'HIP_DEVICE_LIB_PATH', 'PYTHONUNBUFFERED',
+    'TRANSFORMERS_VERBOSITY', 'HALOGEN_ARCH', 'HALOGEN_ATTN_FA',
+    'HALOGEN_ATTN_SD', 'HALOGEN_CACHE_ALIGN', 'HALOGEN_DN_CHUNK', 'HALOGEN_DRAFTER',
+    'HALOGEN_DRAFT_VOCAB_FILE', 'HALOGEN_IMAGE_VERSION', 'HALOGEN_MATMUL_ALGOS',
+    'HALOGEN_MATMUL_BUCKET', 'HALOGEN_MATMUL_TUNING_FILE', 'HALOGEN_MAX_TOKENS_CAP',
+    'HALOGEN_PROMPT_CACHE', 'HALOGEN_QUEUE_TIMEOUT', 'HALOGEN_W4A4', 'HALOGEN_W4A4_EXCL',
+)
+print(json.dumps({key: os.environ[key] for key in KEYS if key in os.environ}))
