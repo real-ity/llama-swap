@@ -14,11 +14,12 @@ models:
     proxy: http://127.0.0.1:${PORT}
     checkEndpoint: /health
 
+  # llama-server splits 8192 total context across two 4096-token slots.
   nemotron-mini:
     cmd: >-
       strix-launch llama --host 127.0.0.1 --port ${PORT}
       --model /models/Nemotron-Mini-4B-Instruct-Q4_K_M.gguf --alias nemotron-mini
-      --jinja --ctx-size 2048 --parallel 2 --no-kv-unified --n-gpu-layers 0
+      --jinja --ctx-size 8192 --parallel 2 --no-kv-unified --n-gpu-layers 99
     proxy: http://127.0.0.1:${PORT}
     checkEndpoint: /health
 

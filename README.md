@@ -59,9 +59,11 @@ selecting a missing heavy model can unload the previous heavy model first.
 
 Select `halogen-qwen3.8-flash-next` for main chat and `nemotron-mini` for titles.
 Flash has one 262,144-token request slot, a 262,144-position KV pool and a
-16,384-token default reply budget. Mini has two 1,024-token CPU slots and can
-stay resident while the other models swap one at a time. Send image generation
-to `flux2-klein-9b`. The separate ComfyUI workflow service opens on demand at
+16,384-token default reply budget. Mini offloads its layers to the GPU.
+llama-server splits its 8,192-token total context into two slots. Each slot
+gets Mini's native 4,096 tokens for the rendered prompt and reply combined.
+Mini can stay resident while other models swap, but shares GPU memory with
+them. Send image generation to `flux2-klein-9b`. ComfyUI opens on demand at
 [`/comfyui/`](http://localhost:8080/comfyui/), with custom nodes disabled and
 scratch outputs inside the container. DS4 is not part of this build.
 
@@ -70,9 +72,10 @@ the [Halogen](https://github.com/peonist-ai/halogen-server/blob/v0.1.4/LICENSE.m
 and [Flash](https://github.com/peonist-ai/halogen-flash-server/blob/v0.18.22/LICENSE.md)
 vendors' terms. Do not redistribute the assembled image or weights. The
 container gets the GPU devices and uses the vendor's unconfined seccomp setting;
-its API is published only on loopback. The test image build was stopped for
-insufficient disk space before the final runtime checks. Startup on Strix Halo,
-full-context Flash generation, and co-residency with Mini remain unverified.
+its API is published only on loopback. Mini's two GPU slots passed a short
+standalone test on Strix Halo. A memory-pressure watchdog stopped the Flash
+launch before it could reply. Full-context Flash generation and GPU
+co-residency with Mini remain unverified.
 
 ## About llama-swap
 
