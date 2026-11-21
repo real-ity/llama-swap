@@ -1,0 +1,42 @@
+# Setup: flash-next-nemotron-mini.md in this directory.
+healthCheckTimeout: 600
+
+macros:
+  FLASH_WEIGHTS: /path/to/flash-weights
+  NEMOTRON_GGUF: /path/to/Nemotron-Mini-4B-Instruct-Q4_K_M.gguf
+
+models:
+  halogen-qwen3.8-flash-next:
+    cmd: >-
+      docker run --rm --pull=never --name llama-swap-flash-${PORT}
+      --device /dev/kfd --device /dev/dri --group-add video --group-add render
+      --ipc=host --ulimit memlock=-1:-1
+      -p 127.0.0.1:${PORT}:8731
+      --mount "type=bind,src=${FLASH_WEIGHTS},dst=/models,readonly"
+      -e HALOGEN_CHECKPOINT=/models/qwen38-flash-next-v2.hgn
+      -e HALOGEN_CTX=262144
+      -e HALOGEN_KV_SLOTS=1
+      -e HALOGEN_KV_POOL_POSITIONS=262144
+      -e HALOGEN_KV_POOL_FIT=0
+      -e HALOGEN_MAX_TOK=16384
+      -e HALOGEN_MAX_TOKENS_DEFAULT=16384
+      ghcr.io/peonist-ai/halogen-flash-server:0.20.7
+    cmdStop: docker stop --time 10 llama-swap-flash-${PORT}
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+  nemotron-mini:
+    cmd: >-
+      llama-server --host 127.0.0.1 --port ${PORT}
+      --model "${NEMOTRON_GGUF}" --alias nemotron-mini --jinja
+      --ctx-size 2048 --parallel 2 --no-kv-unified --n-gpu-layers 0
+    proxy: http://127.0.0.1:${PORT}
+    checkEndpoint: /health
+
+groups:
+  chat-and-titles:
+    swap: false
+    exclusive: false
+    members:
+      - halogen-qwen3.8-flash-next
+      - nemotron-mini
